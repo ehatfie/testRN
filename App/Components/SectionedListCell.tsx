@@ -1,5 +1,5 @@
 import React, { FunctionComponent, useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Button } from 'react-native';
 import { Person, Group } from '../Models/ListModels'
 
 export const SectionedListCell: FunctionComponent<{initial?: number}> = ({ initial = 0}) => {
@@ -15,7 +15,12 @@ interface GroupCellProps {
   data: Group
   isFirst: Boolean,
   isLast: Boolean,
+  
   // pass styles in here??
+}
+
+export interface GroupFooterProps {
+  clickFunction: () => void
 }
 
 interface PersonCellProps {
@@ -39,12 +44,12 @@ export const GroupCell: FunctionComponent<{data: Group, isFirst: Boolean}> = ({d
   )
 }
 // group footer
-export const GroupFooter = () => {
+export const GroupFooter = (something: GroupFooterProps) => {
   
   return (
     <View style={[styles.cell, styles.bottomRounded, styles.topBorder]}>
       <View style={styles.body}>
-        <Text>FOOTER</Text>
+        <Button title={"footer"} onPress={()=>{something.clickFunction()}}/>
       </View>
     </View>
   )
