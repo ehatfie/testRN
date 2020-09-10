@@ -1,53 +1,45 @@
-import React, { Component } from "react";
+import React, { Component, FunctionComponent } from 'react';
 import {
-    StyleSheet, Text, View, SafeAreaView, SectionList, SectionListData, SectionListStatic, SectionListRenderItemInfo, SectionListRenderItem
-} from "react-native";
-
-import SectionedListCell from './SectionedListCell'
+  StyleSheet,
+  Text,
+  View,
+  SafeAreaView,
+  SectionList,
+  SectionListData,
+  SectionListStatic,
+  SectionListRenderItemInfo,
+  SectionListRenderItem,
+} from 'react-native';
+import {
+  Section,
+  Person,
+  Group,
+  PersonValues,
+  GroupValues,
+} from '../Models/ListModels';
+import { SectionedListCell, GroupCell, PersonCell, GroupFooter } from './SectionedListCell';
 
 interface SectionedListComponentProps {
-    name: [String]
-};
+  name: [String];
+}
 
 interface SectionedListComponentState {
-    name: String
-    // associate
-};
+  name: String;
 
-interface Data {
-    title: String
-};
-
-interface Data2<T = any> {
-    
-};
-
-
-interface Section {
-    data: any
 }
 
 interface Data {
-
-}
-
-type Assoc = {
-    name: String
-}
-
-interface Group {
-    groupName: String,
-    active: Boolean
+  title: String;
 }
 
 const MySectionList = SectionList as SectionListStatic<Section>;
 
-function isAssoc(obj: any): obj is Assoc {
-    return obj.name !== undefined
+function isPerson(obj: any): obj is Person {
+  return obj.name !== undefined;
 }
 
 function isGroup(obj: any): obj is Group {
-    return obj.groupName !== undefined
+  return obj.groupName !== undefined;
 }
 /*
 interface SectionListData<T: AnyObject> {
@@ -55,94 +47,102 @@ interface SectionListData<T: AnyObject> {
     let data: [T]
 }
 */
-const SomeValues: SectionListData<Section>[] = [
-    {title: "GroupSection", data: [{data:{groupName: "groupName1", active:false}}]},
-    {title: "AssocSection", data: [{data:{name: "assoc1"}}, {data:{name: "assoc22"}}]}
-]
-// return an optional??
-const myRenderItem3 = ({data}: Section): JSX.Element | undefined => {
-    
-    //return <Text style={styles.cell}> ASSOC: {dataVal.active} </Text>
-    if (isAssoc(data)) {
-        let assoc = data as Assoc
-        return <Text style={styles.cell}> {assoc.name} </Text>
-    } else if (isGroup(data)) {
-        let group = data as Group
-        return <Text style={styles.cell}> {group.groupName} isActive {JSON.stringify(group.active)}</Text>
-    } else {
-        return <Text/>
-    }
+
+const GroupRenderItem = (something: SectionListRenderItemInfo<Section>) => {
+  let isFirst = something.index === 0;
+  let isLast = GroupValues.length == 1 && something.index === (GroupValues.length - 1)
+
+  if(isGroup(something.item.data)) {
+    let group = something.item.data as Group
+    return <GroupCell data={group} isFirst={isFirst}/>
+  }
+  return null
 }
 
+const PersonRenderItem = (something: SectionListRenderItemInfo<Section>) => {
+  let isFirst = something.index === 0;
+  let isLast = something.index === (PersonValues.length - 1)
 
-// return an optional??
-const myRenderItem4 = ({data}: Section) => {
-    // if (data as Assoc) {
-    //     let assoc = data as Assoc
-    //     return <Text style={styles.cell}> {assoc.name} </Text>
-    // } else if (data as Group) {
-    //     let group = data as Group
-    //     return <Text style={styles.cell}> {group.groupName} isActive {JSON.stringify(group.active)}</Text>
-    // } 
-    return <Text style={styles.cell}> {JSON.stringify(data)} </Text>
+  if(isPerson(something.item.data)) {
+    let person = something.item.data as Person
+    return <PersonCell data={person} isFirst={isFirst} isLast={isLast}/>
+  }
+  return null
 }
 
-function renderFooter(section: Section) {
-    // if (section.title == "GroupSection" ) {
-    //     //return <Text style={styles.footer}> Group Footer </Text>
-    // }
+function renderFooter({section}: { section: SectionListData<Section> }) {
+  if (section.key === "Group") {
+    return <GroupFooter />
+  }
 
-    return <Text style={styles.footer}> {section.title} </Text>
+  return null
 }
 
-export default class SectionedListComponent extends Component <SectionedListComponentProps, SectionedListComponentState> {
-    
-    state: SectionedListComponentState = {
-        name: "someName"
-    }
+const CellSeparator = () => {
+  return (<View style={styles.separator} />)
+}
 
-    render() {
-        return (
-            <SafeAreaView style={styles.outer}>
-                <MySectionList
-                    sections={SomeValues}
-                    keyExtractor={(item:Section, index:number) => item.title + index.toString()}
-                    renderItem={({item}: SectionListRenderItemInfo<Section>) => myRenderItem3(item)}//{ myRenderItem3 }
-                    renderSectionHeader={({section}: {section: Section}) => (
-                        <Text style={styles.header}>{section.title} </Text>
-                      )}
-                    renderSectionFooter={({section}: {section: Section}) => (renderFooter(section))}
-                    //renderSectionFooter={({section}: {section: Section}) => (
-                    //    renderFooter(section)
-                     // )}
-                    />
-            </SafeAreaView>
-        )
-    }
+const TableValues: SectionListData<Section>[] = [
+  {key: 'Group', data: GroupValues, renderItem: GroupRenderItem},
+  {key: 'Person', data: PersonValues, renderItem: PersonRenderItem}
+];
 
-    // public renderSectionHeader = ({section}: { section: SectionListData<Item>; }): ReactElement | null => (
-    //      <ReactSectionHeader />
-    //   )
+export default class SectionedListComponent extends Component<
+  SectionedListComponentProps,
+  SectionedListComponentState
+> {
+  state: SectionedListComponentState = {
+    name: 'someName',
+  };
+
+  render() {
+    return (
+      <SafeAreaView style={styles.outer}>
+        <MySectionList
+          sections={TableValues}
+          keyExtractor={(item: Section, index: number) =>
+            item + index.toString()
+          }
+          renderSectionHeader={(section: {section: SectionListData<Section>;}) => (
+            <Text style={styles.header}>{section.section.key} </Text>
+          )}
+          renderSectionFooter={(info: { section: SectionListData<Section>}) => renderFooter(info)}
+          ItemSeparatorComponent={CellSeparator}
+        />
+      </SafeAreaView>
+    );
+  }
+
+  // public renderSectionHeader = ({section}: { section: SectionListData<Item>; }): ReactElement | null => (
+  //      <ReactSectionHeader />
+  //   )
 }
 
 const styles = StyleSheet.create({
-    cell: {
-      borderWidth: 1,
-      width: '100%',
-      height: 75,
-      alignContent: 'center',
-      justifyContent: 'center',
-      alignSelf: 'center'
-    },
-    outer: {
-        flex: 1,
-        borderWidth: 1,
-        borderColor: 'red'
-    }, 
-    header: {
-        height: 50
-    },
-    footer: {
-        borderWidth: 1,
-    }
-})
+  cell: {
+    borderWidth: 1,
+    width: '100%',
+    height: 75,
+    alignContent: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
+  },
+  outer: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: 'red',
+    backgroundColor: 'gray'
+  },
+  header: {
+    height: 50,
+  },
+  footer: {
+    borderWidth: 1,
+  },
+  separator: {
+    backgroundColor: 'gray',
+    marginLeft: 10,
+    marginRight: 10,
+    height: 1
+  },
+});
